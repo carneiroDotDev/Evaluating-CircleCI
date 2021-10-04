@@ -1,31 +1,51 @@
 version: 2.1
 
+# jobs:
+#   save_hello_world_output:
+#     docker:
+#       - image: circleci/node:13.8.0
+#     steps:
+#       - run: echo "hello world" > ~/output.txt
+#       - persist_to_workspace:
+#           root: ~/
+#           paths:
+#             - output.txt
+
+#   print_output_file:
+#     docker:
+#       - image: circleci/node:13.8.0
+#     steps:
+#       - attach_workspace:
+#           at: ~/
+#       - run: cat ~/fails.txt
+#       - run:
+#           command: echo Pipeline failed
+#           when: on_fail
+
+# workflows:
+#   my_workflow:
+#     jobs:
+#       - save_hello_world_output
+#       - print_output_file:
+#           requires:
+#             - save_hello_world_output
+
+# Exercise: Infrastructure Creation
+# Exercise - Rollback
 jobs:
-  save_hello_world_output:
+  create_infrastructure:
     docker:
-      - image: circleci/node:13.8.0
+      - image: amazon/aws-cli
     steps:
-      - run: echo "hello world" > ~/output.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - output.txt
-
-  print_output_file:
-    docker:
-      - image: circleci/node:13.8.0
-    steps:
-      - attach_workspace:
-          at: ~/
-      - run: cat ~/fails.txt
+      - checkout
       - run:
-          command: echo Pipeline failed
-          when: on_fail
-
+          name: Create Cloudformation Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file template.yml \
+              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
+              --region eu-central-1
 workflows:
   my_workflow:
     jobs:
-      - save_hello_world_output
-      - print_output_file:
-          requires:
-            - save_hello_world_output
+      - create_infrastructure
