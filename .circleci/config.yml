@@ -32,6 +32,13 @@ version: 2.1
 
 # Exercise: Infrastructure Creation
 # Exercise - Rollback
+commands: 
+  destroy_environment:
+    steps:
+      -run:
+        name: Destroy environment
+        command:
+          aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} --region eu-central-1
 jobs:
   create_infrastructure:
     docker:
@@ -45,6 +52,9 @@ jobs:
               --template-file template.yml \
               --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
               --region eu-central-1
+      - run: return 1
+      - destroy_environment
+        when: on_fail
 workflows:
   my_workflow:
     jobs:
